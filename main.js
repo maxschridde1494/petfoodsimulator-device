@@ -1,18 +1,66 @@
-/*
- *     Copyright (C) 2010-2016 Marvell International Ltd.
- *     Copyright (C) 2002-2010 Kinoma, Inc.
- *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *     Unless required by applicable law or agreed to in writing, software
- *     distributed under the License is distributed on an "AS IS" BASIS,
- *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *     See the License for the specific language governing permissions and
- *     limitations under the License.
- */
-trace("Hello, World!\n");
-debugger;
+let buttonStyle = new Style({font: '22px', color: 'white'});
+let textStyle = new Style({font: 'bold 50px', color: 'white'});
+
+let whiteSkin = new Skin({fill: 'white'});
+let blueSkin = new Skin({fill: 'blue'});
+let backgroundSkin = new Skin({fill: ["#202020", "#7DBF2E"]});
+
+
+var Pins = require("pins");
+
+class AppBehavior extends Behavior{
+	onLaunch(application){
+		Pins.configure({
+			button:{
+				require: "Digital",
+				pins: {
+					digital: {pin: 53, direction: "input"},
+					power: {pin: 54, voltage: 3.3, type: "Power"},
+					ground: {pin: 55, type: "Ground"},
+				}
+			},
+			led: {
+				require: "Digital",
+				pins: {
+					digital: {pin: 51, direction: "output"},
+					ground: {pin: 52, type: "Ground"},
+				}
+			}
+		}, success => {
+			if (success){
+				trace("Configured pins.\n");
+				Pins.share("ws", {
+					zeroconf: true,
+					name: "pins-share-led"
+				});
+			}
+			else trace("Failed to configure pins.\n");
+		});
+	}
+}
+application.behavior = new AppBehavior();
+
+let MainContainer = Container.template($ => ({
+	top: 0, bottom: 0, left: 0, right: 0,
+	active: true, skin: backgroundSkin, state: 0,
+	contents: [
+		Label($, {name: "statusString", 
+			top: 0, bottom: 0, left: 0, right: 0,
+			style: textStyle, string: "OFF"}),
+	],
+	Behavior: class extends Behavior{
+		onTouchBegan(container){
+			container.state = 1;
+			application.distribute("onToggleLight", 1);
+		}
+		onTouchEnded(container){
+			container.state = 0;
+			application.distribute("onToggleLight", 0);
+		}
+		onToggleLight(container, value){
+			container.statusString.string = (value) ? "ON" : "OFF";
+		}
+	}
+}));
+var main = new MainContainer({string: "Ready!", backgroundColor: "#7DBF2E"});
+application.add(main);
