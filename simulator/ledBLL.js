@@ -15,22 +15,26 @@
 var PinsSimulators = require("PinsSimulators");
 
 exports.pins = {
-    led: {type: "Digital", direction: "output"}
+    led: {type: "Digital", direction: "output"},
+    ground: {type: "Ground"}
 };
 
-exports.configure = function() {
+exports.configure = function(configuration) {
+  //addSimulatorPart(JSON) creates the data-driven pins simulator
   this.pinsSimulator = shell.delegate("addSimulatorPart", {
     header : { 
-      label : "LED", 
+      label : "Led", 
       name : "Digital Output", 
       iconVariant : PinsSimulators.SENSOR_LED
     },
     axes : [
       new PinsSimulators.DigitalOutputAxisDescription(
         {
+          ioType: "output",
+          dataType: "boolean",
           valueLabel : "LED",
           valueID : "ledValue",
-          defaultControl: "BUTTON"
+          defaultControl: PinsSimulators.SQUARE_GENERATOR
         }
       ),
     ]
@@ -39,13 +43,11 @@ exports.configure = function() {
 }
 
 exports.read = function() {
-  this.state = this.pinsSimulator.delegate("getValue").ledValue;
-  return this.state;        
+  return this.pinsSimulator.delegate("getValue").ledValue;
 }
 
 exports.write = function(value){
-    trace("value" + string(value) + "\n");
-    this.state = this.pinsSimulator.delegate("setValue", value);
+    this.pinsSimulator.delegate("setValue", "ledValue", value);
 }
 
 // exports.loop = function(){
