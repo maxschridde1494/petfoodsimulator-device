@@ -6,9 +6,12 @@
         "emptySample"
     ],
     "Create":{
-        "main":"main"
+        "main":"src/main"
     },
     "Element":{
-        "main":"main"
-    },    "iap140":{    	"main":"main"	}
+        "main":"src/main"
+    },
+    "iap140":{
+    	"main":"src/main"
+	}
 }

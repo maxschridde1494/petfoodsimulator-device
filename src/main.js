@@ -20,9 +20,9 @@ class AppBehavior extends Behavior{
 				}
 			},
 			led: {
-				require: "Digital",
+				require: "ledBLL",
 				pins: {
-					digital: {pin: 51, direction: "output"},
+					led: {pin: 51, direction: "output"},
 					ground: {pin: 52, type: "Ground"},
 				}
 			}
