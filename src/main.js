@@ -29,15 +29,13 @@ class AppBehavior extends Behavior{
 		}, success => {
 			if (success){
 				trace("Configured pins.\n");
-				Pins.invoke("/led/read", value => {
-					trace("LED Value: " + value + "\n");
-				});
+				// Pins.invoke("/led/read", value => {
+				// 	trace("LED Value: " + value + "\n");
+				// });
 				Pins.share("ws", {
 					zeroconf: true,
 					name: "pins-share-led"
 				});
-				// Pins.invoke("/led/write", 1);
-				// trace("after write\n");
 			}
 			else trace("Failed to configure pins.\n");
 		});
