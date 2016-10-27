@@ -1,3 +1,4 @@
+//DEVICE
 let buttonStyle = new Style({font: '22px', color: 'white'});
 let textStyle = new Style({font: 'bold 50px', color: 'white'});
 
@@ -8,8 +9,30 @@ let backgroundSkin = new Skin({fill: ["#202020", "#7DBF2E"]});
 
 var Pins = require("pins");
 
+Handler.bind("/respond", Behavior({
+    onInvoke: function(handler, message){
+        message.responseText = "You found me!";
+        message.status = 200;    
+    }
+}));
+Handler.bind("/updateUI", Behavior({
+	onInvoke: function(handler, message){
+		application.main.statusString.string = "Updated.";
+		message.responseText = "Feeding";
+		message.status = 200;
+	}
+}));
+Handler.bind("/resetUI", Behavior({
+	onInvoke: function(handler, message){
+		application.main.statusString.string = "OFF.";
+		message.responseText = "OFF";
+		message.status = 200;
+	}
+}));
+
 class AppBehavior extends Behavior{
 	onLaunch(application){
+		application.shared = true;
 		Pins.configure({
 			button:{
 				require: "Digital",
@@ -40,11 +63,14 @@ class AppBehavior extends Behavior{
 			else trace("Failed to configure pins.\n");
 		});
 	}
+	onQuit(application){
+		application.shared = false;
+	}
 }
 application.behavior = new AppBehavior();
 
 let MainContainer = Container.template($ => ({
-	top: 0, bottom: 0, left: 0, right: 0,
+	name: 'main', top: 0, bottom: 0, left: 0, right: 0,
 	active: true, skin: backgroundSkin, state: 0,
 	contents: [
 		Label($, {name: "statusString", 
