@@ -9,6 +9,10 @@ let backgroundSkin = new Skin({fill: ["#202020", "#7DBF2E"]});
 
 var Pins = require("pins");
 var amountFoodEaten = 0;
+var active = false;
+let songTitle = "All Along the Watchtower";
+let songArtist = "Jimi Hendrix";
+var song;
 
 Handler.bind("/respond", Behavior({
     onInvoke: function(handler, message){
@@ -18,14 +22,21 @@ Handler.bind("/respond", Behavior({
 }));
 Handler.bind("/updateUI", Behavior({
 	onInvoke: function(handler, message){
+		song = new Media({url: "assets/jimi.mp3",
+		  width: 0, height: 0});
+		application.add(song);
+		song.start();
 		application.main.maincol.statusString.string = "Feeding.";
+		active = true;
 		message.responseText = "Feeding";
 		message.status = 200;
 	}
 }));
 Handler.bind("/resetUI", Behavior({
 	onInvoke: function(handler, message){
+		song.stop();
 		application.main.maincol.statusString.string = "OFF.";
+		active = false;
 		message.responseText = "OFF";
 		message.status = 200;
 	}
@@ -66,7 +77,7 @@ class AppBehavior extends Behavior{
 					name: "pins-share-led"
 				});
 				Pins.repeat("/analog/read", 10, function(result){
-			   		if (amountFoodEaten != result){
+			   		if (amountFoodEaten != result && active == true){
 			   			amountFoodEaten = result;
 			   			application.main.maincol.amountEaten.string = String(Math.round(amountFoodEaten*100)) + "% Eaten";
 			   		}
