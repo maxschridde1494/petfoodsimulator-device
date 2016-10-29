@@ -13,15 +13,30 @@ var active = false;
 let songTitle = "All Along the Watchtower";
 let songArtist = "Jimi Hendrix";
 var song;
+let companionURL;
+var timer = 1;
+var currSchedule;
 
+Handler.bind("/discover", Behavior({
+    onInvoke: function(handler, message){
+        trace("Device found the companion.\n");
+        companionURL = JSON.parse(message.requestText).url;
+        handler.invoke(new Message(companionURL + "respond"), Message.TEXT);    
+    },
+    onComplete: function(handler, message, text){
+        trace("Response was: " + text + "\n");
+    }
+}));
 Handler.bind("/respond", Behavior({
     onInvoke: function(handler, message){
-        message.responseText = "You found me!";
+        message.responseText = "Companion, you found me!";
         message.status = 200;    
     }
 }));
+
 Handler.bind("/updateUI", Behavior({
 	onInvoke: function(handler, message){
+		handler.invoke(new Message(companionURL + "getSchedule"), Message.TEXT);
 		song = new Media({url: "assets/jimi.mp3",
 		  width: 0, height: 0});
 		application.add(song);
@@ -30,6 +45,17 @@ Handler.bind("/updateUI", Behavior({
 		active = true;
 		message.responseText = "Feeding";
 		message.status = 200;
+	},
+	onComplete: function(handler, message, text){
+		if (text == "Once"){
+			currSchedule = 1;
+		}else if (text == "Twice"){
+			currSchedule = 2;
+		}else if (text == "Three Times"){
+			currSchedule = 3;
+		};
+		timer = currSchedule;
+		handler.invoke(new Message("/startFeeding"));
 	}
 }));
 Handler.bind("/resetUI", Behavior({
@@ -42,9 +68,38 @@ Handler.bind("/resetUI", Behavior({
 	}
 }));
 
+Handler.bind("/startFeeding", {
+    onInvoke: function(handler, message){
+        handler.invoke(new Message("http://time.jsontest.com/"), Message.JSON);
+    },
+    onComplete: function(handler, message, json){
+         trace(json.time);
+         if (timer >= 0){
+         	application.main.maincol.amountFed.string = String(timer);
+         	timer -= 1;
+         	if (timer == 0){
+         		timer = currSchedule;
+         	}
+         	handler.invoke( new Message("/delay"));
+        }
+    }
+});
+
+Handler.bind("/delay", {
+    onInvoke: function(handler, message){
+        handler.wait(5000); //will call onComplete after 5 seconds
+    },
+    onComplete: function(handler, message){
+        if (active == true){
+        	handler.invoke(new Message("/startFeeding"));
+        }
+    }
+});
+
 class AppBehavior extends Behavior{
 	onLaunch(application){
 		application.shared = true;
+		application.discover("petfood.companion.app");
 		Pins.configure({
 			button:{
 				require: "Digital",
@@ -88,6 +143,7 @@ class AppBehavior extends Behavior{
 	}
 	onQuit(application){
 		application.shared = false;
+		application.forget("petfood.companion.app");
 	}
 }
 application.behavior = new AppBehavior();
@@ -102,6 +158,9 @@ let MainContainer = Container.template($ => ({
 				Label($, {name: "statusString", 
 					top: 0, bottom: 0, left: 0, right: 0,
 					style: textStyle, string: "OFF"}),
+				Label($, {name: "amountFed", 
+					top: 0, bottom: 0, left: 0, right: 0,
+					style: textStyle, string: "0"}),
 				Label($, {
 					name: "amountEaten",
 					top: 0, bottom: 0, left: 0, right: 0,

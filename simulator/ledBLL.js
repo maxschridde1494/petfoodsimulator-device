@@ -50,15 +50,6 @@ exports.write = function(value){
     this.pinsSimulator.delegate("setValue", "ledValue", value);
 }
 
-// exports.loop = function(){
-//   for (var i = 0; i < 5; i++){
-//     this.led.write(1);
-//     sensorUtils.mdelay( 500 ); //waits 500ms
-//     this.led.write(0);
-//     sensorUtils.mdelay( 500 ); //waits 500ms
-//   }
-// }
-
 exports.close = function() {
 	shell.delegate("removeSimulatorPart", this.pinsSimulator);
 }
